@@ -1,44 +1,34 @@
-import http from "http";
-import fs from "fs/promises";
+import express from "express";
 import path from "path";
-import url from "url";
+import { fileURLToPath } from "url";
+import process from "process";
+import dotenv from "dotenv";
 
-const PORT = 8080;
+// Load environment variables from .env file
+dotenv.config();
 
-const __filename = url.fileURLToPath(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const server = http.createServer(async (req, res) => {
-  try {
-    if (req.method === "GET") {
-      let filepath;
-      if (req.url === "/") {
-        filepath = path.join(__dirname, "public", "index.html");
-      } else if (req.url === "/about") {
-        filepath = path.join(__dirname, "public", "about.html");
-      } else if (req.url === "/contact") {
-        filepath = path.join(__dirname, "public", "contact.html");
-      } else {
-        throw new Error("Not found");
-      }
+const app = express();
 
-      const data = await fs.readFile(filepath);
-      res.setHeader("Content-Type", "text/html");
-      res.write(data);
-      res.end();
-    } else {
-      throw new Error("Method not allowed");
-    }
-  } catch (error) {
-    let filepath = path.join(__dirname, "public", "404.html");
-
-    const data = await fs.readFile(filepath);
-    res.setHeader("Content-Type", "text/html");
-    res.write(data);
-    res.end();
-  }
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}...`);
+app.get("/about", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "about.html"));
+});
+
+app.get("/contact", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "contact.html"));
+});
+
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
 });
